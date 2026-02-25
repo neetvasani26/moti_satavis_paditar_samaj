@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--
+      If you are serving your web app in a path other than the root, change the
+      href value below to reflect the base path you are serving from.
+
+      The path provided below has to start and end with a slash "/" in order for
+      it to work correctly.
+
+      For more details:
+      * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+      This is a placeholder for base href that will be replaced by the value of
+      the `--base-href` argument provided to `flutter build`.
+    -->
+    <base href="/moti_satavis_patidar_samaj">
+
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="A new Flutter project.">
+    <script>
+        // Check for SharedArrayBuffer support
+        if (typeof SharedArrayBuffer === 'undefined') {
+          console.warn('SharedArrayBuffer is not available. Cross-Origin Isolation may not be enabled.');
+        }
+    </script>
+    <!--    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script><script>  let ffmpeg;  let isLoaded = false;  async function trimVideoJS(fileBlob, startTime, endTime) {    if (!ffmpeg) ffmpeg = FFmpeg.createFFmpeg({ log: true });    if (!isLoaded) {      await ffmpeg.load();      isLoaded = true;    }    const fileName = 'input.mp4';    const outputName = 'output.mp4';    const buffer = await fileBlob.arrayBuffer();    ffmpeg.FS('writeFile', fileName, new Uint8Array(buffer));    await ffmpeg.run(      '-ss', `${startTime}`,      '-i', fileName,      '-t', `${endTime - startTime}`,      '-c:v', 'copy',      '-c:a', 'copy',      outputName    );    const data = ffmpeg.FS('readFile', outputName);    const trimmedBlob = new Blob([data.buffer], { type: 'video/mp4' });    const url = URL.createObjectURL(trimmedBlob);    return data;  }  window.trimVideoJS = trimVideoJS;</script>-->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <script>
+        let ffmpeg;
+        let isLoaded = false;
+
+        async function trimVideoJS(fileBlob, startTime, endTime) {
+          if (!ffmpeg) ffmpeg = FFmpeg.createFFmpeg({ log: true });
+          if (!isLoaded) {
+            await ffmpeg.load();
+            isLoaded = true;
+          }
+
+          const fileName = 'input.mp4';
+          const outputName = 'output.mp4';
+          const buffer = await fileBlob.arrayBuffer();
+
+          ffmpeg.FS('writeFile', fileName, new Uint8Array(buffer));
+
+          // Force duration to exactly 10.0000 seconds
+          const epsilon = 0.03; // subtract 30 ms to avoid overshoot
+          const trimDuration = (endTime - startTime - epsilon).toFixed(4);
+<!--          const duration = (endTime - startTime).toFixed(4);-->
+<!--          const fixedDuration = Math.min(10.0000, duration).toFixed(4);-->
+
+          await ffmpeg.run(
+  '-ss', `${startTime}`,
+  '-i', fileName,
+  '-to', `${trimDuration}`,
+  '-c:v', 'libx264',
+  '-preset', 'ultrafast',    // Fastest encoding
+  '-crf', '28',             // Lower quality but faster
+  '-c:a', 'aac',
+  '-b:a', '128k',           // Reduced audio bitrate
+  '-movflags', '+faststart', // Optimize for web playback
+  '-avoid_negative_ts', 'make_zero',
+
+  outputName
+);
+
+          const data = ffmpeg.FS('readFile', outputName);
+          const trimmedBlob = new Blob([data.buffer], { type: 'video/mp4' });
+          const url = URL.createObjectURL(trimmedBlob);
+
+          return { data, url };
+        }
+
+        window.trimVideoJS = trimVideoJS;
+    </script>
+
+
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="samaj_admin">
+    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+    <!-- Favicon -->
+      <link rel="icon" type="image/png" href="favicon.png"/>
+    <link rel="icon" type="image/gif" href="icons/loading.gif" />
+
+    <title>samaj_admin</title>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+<script src="flutter_bootstrap.js" async></script>
+<script>
+    window.flutterWebRenderer = "html";
+</script>
+<!-- <script type="application/javascript"
+         defer src="/assets/packages/flutter_inappwebview_web/assets/web/web_support.js"></script>-->
+</body>
+</html>
